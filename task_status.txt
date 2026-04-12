@@ -1,0 +1,59 @@
+PROJECT STATUS REPORT: SAFEBET (formerly AEGIS)
+
+==================================================
+ALL TASKS COMPLETED
+==================================================
+
+1. AI Engine & Smart Rules ("Human-Smart" Upgrades)
+   [DONE] Whitelist Expansion: Expanded KNOWN_ENTITIES in ai_engine.py to include DeFi blue chips (AAVE, CRV, MKR) alongside existing stablecoins and major tokens.
+   [DONE] Proxy Sophistication (On-Chain): Upgraded proxy_detector.py to actively read EIP-1967 admin slots and inspect their bytecode to classify them as EOA (regular wallet), MULTISIG (Gnosis Safe), or TIMELOCK.
+   [DONE] Proxy Sophistication (Source Code): Upgraded source_scanner.py to parse source code for Timelock patterns (automatically extracting the delay time), Multi-Sig references, OpenZeppelin imports, and Governance code.
+   [DONE] Power vs Malice Assessment: Enhanced ai_engine.py functions to weigh professional safeguards (timelocks, multisigs) against generic rug-pull patterns.
+   [DONE] Trust Score Balancing: Updated trust_score.py to grant bonuses for professional architecture and enforce a minimum score for recognized whitelist entities.
+   [DONE] API Router & Prompts: Updated scan.py and schemas.py to funnel new data to the frontend. Rewrote AI prompts and template fallbacks.
+
+2. Project Renaming ("Aegis" -> "SafeBet") — FULLY COMPLETE
+   [DONE] main.py: "Aegis API" -> "SafeBet API"
+   [DONE] schemas.py: AegisReport -> SafeBetReport
+   [DONE] scan.py: references updated to SafeBetReport
+   [DONE] ai_engine.py: system prompt uses SafeBet branding
+   [DONE] frontend/index.html: <title> and <meta description> updated to SafeBet
+   [DONE] frontend/src/pages/Landing.jsx: Hero heading "AEGIS" -> "SAFEBET"
+   [DONE] frontend/src/index.css: Design system comments updated to SafeBet
+   [DONE] frontend/package.json: package name "aegis-frontend" -> "safebet-frontend"
+   [DONE] Directory renamed from aegis/ to safebet/
+
+3. Stellar SDK Integration — FULLY COMPLETE
+   [DONE] Backend flag fetching, risk assessment, schemas
+   [DONE] Frontend Landing.jsx dispatch for Stellar chains
+   [DONE] Frontend Scanning.jsx progress flow for Stellar
+   [DONE] Frontend Report.jsx and StellarReportView UI
+   [DONE] Fixed: stellar-sdk[aiohttp] dependency (ServerAsync requires aiohttp extra)
+   [DONE] Fixed: StellarReportView was using wrong props for RiskFlag — built dedicated StellarFlag component
+   [DONE] Fixed: Risk badge CSS used broken rgba(var(...)) interpolation — replaced with direct rgba values
+   [DONE] Verified: End-to-end scan of Circle (circle.com) USDC issuer returns 200 OK with full report
+
+4. Module 3 (Collapse Simulation) Integration — FULLY COMPLETE
+   [DONE] Replace `services/etherscan.py` with full implementation (Etherscan V2 API, free-tier tokentx aggregation for holders)
+   [DONE] Replace `services/dexscreener.py` with full implementation (pool reserves, lock detection via labels, cross-pair aggregation)
+   [DONE] Create `services/lp_verifier.py` (on-chain LP lock/burn verification via burn addresses + locker contracts)
+   [DONE] Replace `analyzers/dump_calculator.py` with full implementation (Uniswap V2 AMM simulation, multi-holder cascade, holder grading)
+   [DONE] Update `routers/scan.py` to wire Module 3 data (token_info for total_supply, lp_verifier, new dump_calculator params, all new fields)
+   [DONE] Update `frontend/src/components/Module3Collapse.jsx` (LP verification display, cascade impact, inline dump calculator)
+
+5. Module 2 (Trap Detection) Integration — FULLY COMPLETE
+   [DONE] `blockchain/honeypot_simulator.py` — Bridge to Module 2 pipeline (maps M2 results to legacy dict format)
+   [DONE] `module2_runner.py` — Full orchestrator (parallel data gathering → source scan → simulation → trap rules → scoring)
+   [DONE] `blockchain/sell_simulator.py` — On-chain buy/sell simulation via eth_call state overrides
+   [DONE] `blockchain/pair_resolver.py` — DEX pair resolution (DexScreener + Uniswap V2/V3 factory fallback)
+   [DONE] `blockchain/module2_contract_reader.py` — On-chain reads (owner, taxes, trading flags, max tx/wallet)
+   [DONE] `blockchain/module2_proxy_detector.py` — EIP-1967 proxy slot detection
+   [DONE] `analyzers/module2_source_scanner.py` — Regex-based source code trap pattern scanner
+   [DONE] `analyzers/trap_rules.py` — 20+ rule engine mapping evidence to findings
+   [DONE] `analyzers/module2_score.py` — Score calculator (severity-weighted deductions + data confidence)
+   [DONE] `analyzers/revert_classifier.py` — Revert reason classifier for simulation failures
+   [DONE] `schemas/findings.py` — Full Pydantic data contract (Module2Result, Finding, SimulationResult, etc.)
+   [DONE] `config.py` — Settings bridge with RPC URL, DEX addresses, simulation config
+   [DONE] `routers/scan.py` — Wired Module 2 results into SafeBetReport (findings, scores, pair info)
+   [DONE] `models/schemas.py` — Module2Data + Module2Finding schemas for API response
+   [DONE] `frontend/src/components/Module2Traps.jsx` — Full trap detection UI (findings, simulation, scores)

@@ -1,0 +1,201 @@
+SafeBet Scanner — Complete Output Reference & Decision Guide
+=============================================================
+
+This document lists every data point produced by the SafeBet backend,
+its plain-English explanation, and how it affects your investment decision.
+
+================================================================================
+1. OVERALL SCORE & METADATA
+================================================================================
+
+┌─────────────────────┬────────────────────────────────────────────────────────┐
+│ Field               │ What It Means                                          │
+├─────────────────────┼────────────────────────────────────────────────────────┤
+│ Token Address       │ The contract address of the scanned token.             │
+│ Token Name          │ The registered name of the token (e.g., Tether USD).   │
+│ Token Symbol        │ The ticker symbol of the token (e.g., USDT).           │
+│ Trust Score (0-100) │ Composite safety rating. Higher = safer.               │
+│ Score Band          │ Letter grade: LOW / MODERATE / HIGH / CRITICAL RISK.   │
+│ The Catch           │ AI-written 1-liner explaining the biggest danger.      │
+│ Verdict             │ Multi-sentence AI summary of the full risk profile.    │
+│ Scan Duration       │ How long the full analysis took (seconds).             │
+│ Flag Explanations   │ Dictionary of dynamically generated plain-English      │
+│                     │ explanations and decision impacts for every flag.      │
+└─────────────────────┴────────────────────────────────────────────────────────┘
+
+DISPLAY: Card header for token details. Animated circular gauge for Trust Score with 
+glow effect, color-coded band pill, "The Catch" as a red-accented alert banner, 
+Verdict as a card with left border.
+
+
+================================================================================
+2. MODULE 1 — CONTRACT CONTROL DATA
+================================================================================
+Purpose: Identifies who has power over this contract and what they can do with it.
+
+FIELD                       │ BRIEF EXPLANATION                            │ DECISION IMPACT
+────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Source Code (is_open_source)│ Is the contract code publicly readable?      │ Hidden code = zero transparency. You're
+                            │                                              │ trusting a black box with your funds.
+────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Proxy / Upgradeable         │ Can the contract be silently upgraded?       │ Upgradeable means today's rules can change
+(is_proxy, proxy_type,      │ Includes proxy implementation and type.      │ tomorrow. The dev could swap in drain logic.
+proxy_implementation)       │                                              │
+────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Ownership                   │ Does someone still have admin control?       │ A live owner can call any privileged function
+(owner_address, admin_type, │ Checks owner/admin address, type, and if     │ at any moment — risk multiplier with other
+admin_address, renounced)   │ ownership is renounced.                      │ powers like tax or blacklist.
+────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Tax Changeable              │ Can buy/sell fees be modified by the owner?  │ Tax can be raised to 99% after you buy,
+(can_change_tax)            │                                              │ trapping your funds on sell. #1 rug technique.
+────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Mintable (is_mintable)      │ Can new tokens be created from nothing?      │ Minting dilutes your holdings. 1B new tokens
+                            │                                              │ = your share becomes nearly worthless.
+────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Blacklist Function          │ Can specific wallets be individually frozen? │ YOUR specific wallet could be blacklisted,
+(has_blacklist)             │                                              │ permanently locking your tokens.
+────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Max TX Control              │ Can the max transaction size be changed?     │ Setting max TX to 0 blocks ALL trades. Even
+(has_max_tx_control)        │                                              │ if selling isn't "disabled" — dust amounts.
+────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Trading Control             │ Can trading be toggled on/off entirely?      │ One transaction from the owner can disable
+(has_trading_control)       │                                              │ ALL selling globally. Instant liquidity lock.
+────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Deployer History            │ Track record of the deploying wallet.        │ Serial deployers with high death ratios are
+(deployer_address,          │ Analyzes how many past tokens are "dead" vs  │ the hallmark of rug-pull operations.
+deployer_dead_ratio, etc)   │ total tokens deployed.                       │
+────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Professional Safeguards     │ Timelock, Multisig, OpenZeppelin, Governance,│ These reduce risk — professional architecture
+(has_timelock_pattern,      │ Role-Based Access. Evaluates timelock delay  │ means power is shared and delayed, not instant.
+uses_openzeppelin, etc)     │ hours and access control mechanisms.         │
+
+DISPLAY:
+  • Power Grid — 8 icon cards showing each control power at a glance
+  • Risk Radar — Chart.js radar chart with 6 risk axes (Proxy, Minting, Tax,
+    Blacklist, Trading, Ownership). Red fill = higher risk.
+  • Professional Safeguards — green badge pills for each detected safeguard
+  • Expandable Flags — each flag has brief + decision impact text
+
+
+================================================================================
+3. MODULE 2 — TRAP DETECTION DATA
+================================================================================
+Purpose: Tests whether you can actually sell this token after buying it.
+
+FIELD                       │ BRIEF EXPLANATION                            │ DECISION IMPACT
+────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Honeypot                    │ Simulated buy-then-sell to test if blocked.  │ If you can't sell, your investment is
+(is_honeypot, sim_status)   │ Status like 'sellable', 'confirmed_blocked'  │ permanently locked. The most critical trap.
+────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Sell Tax (current_sell_tax) │ % taken from you on every sell.              │ 10% sell tax = you need a 10% gain just to
+                            │                                              │ break even on exit.
+────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Buy Tax (current_buy_tax)   │ % taken from you on every buy.               │ You start underwater from the moment you buy.
+                            │                                              │ E.g. 10% buy tax = -10% day one.
+────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Max Possible Tax            │ Highest the owner could set taxes to.        │ Even if current tax is 5%, the code could
+(max_possible_tax,          │ And whether taxes are currently changeable.  │ allow up to 99%. Owner can change it later.
+tax_is_changeable)          │                                              │
+────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Proxy Trap                  │ Upgradeable contract + live owner.           │ The dev can swap the contract to ANYTHING.
+(proxy_trap_active)         │                                              │ A drain function, a block-all-sells, anything.
+────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Self Destruct               │ Contract has a kill-switch function.         │ If the contract self-destructs, all token
+(has_selfdestruct)          │ Or other suspicious arbitrary functions.     │ balances become permanently inaccessible.
+────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+M2 Metrics                  │ Score (0-100), Verdict (low/danger/etc),     │ Composite measure from all findings.
+(m2_score, m2_verdict,      │ Summary text, confident level, and counts of │ Quick signal for go/no-go decision.
+m2_summary, findings_count) │ high/critical issues.                        │
+────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Detailed Findings           │ Full list of engine findings with severity.  │ Each finding explains WHAT was detected and
+(detailed_findings)         │ Includes id, title, evidence type, and       │ WHAT THE CONSEQUENCE is for your investment.
+                            │ consequence.                                 │
+────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Execution & DEX Meta        │ honeypot_sim_status, source_scan_status,     │ Debug/transparency metrics showing what chain,
+(pair_found, dex_name,      │ owner_read_status, dex pair info, routing,   │ DEX, and router was used for the simulation.
+detected_chain)             │ and initial liquidity check.                 │
+
+DISPLAY:
+  • Score Doughnut — Chart.js doughnut with score/100, verdict badge below
+  • Simulation Terminal — Terminal-style display showing buy/sell test results
+    step-by-step with green checkmarks or red X marks
+  • Tax Gauges — 3 circular gauges (Buy Tax, Sell Tax, Max Possible)
+  • Threat Cards — Severity-sorted finding cards with left-border colors
+  • Expandable Flags — brief + decision impact for every check
+
+
+================================================================================
+4. MODULE 3 — MARKET & COLLAPSE ANALYSIS DATA
+================================================================================
+Purpose: Simulates what happens to your money if large holders sell.
+
+FIELD                         │ BRIEF EXPLANATION                            │ DECISION IMPACT
+──────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Liquidity Metrics             │ Total USD in the trading pool, pool tokens,  │ <$10K = wild swings on small trades.
+(liquidity_usd, pool ratios)  │ and ETH reserves.                            │ >$100K = stable, clean exits possible.
+──────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Liquidity Lock                │ Can the dev drain the trading pool? Details  │ Unlocked = classic rug-pull setup. One TX
+(liquidity_locked, lock_expiry│ if locked, who locked it, and for how long.  │ can remove ALL pool funds, price → $0.
+days_until_unlock)            │                                              │
+──────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+LP Verification               │ On-chain check if LP tokens burned/locked.   │ >80% secured = strong protection.
+(lp_lock_method, lp_burned,   │ Percentages for burned vs locked liquidity,  │ <30% = most LP tokens are withdrawable.
+lp_total_secured_percent)     │ specific locker names, and consequence text. │
+──────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Top Holder Stats              │ Largest single wallet address and share %.   │ >30% = extreme. Their sell would crash price.
+(top_holder_percent)          │                                              │
+──────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Top 5 Holders %               │ Combined supply held by top 5 wallets.       │ >60% in 5 wallets = coordinated selling
+(top_5_holder_percent)        │                                              │ would be catastrophic.
+──────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Dump Impact %                 │ Price drop if top holder sells everything.   │ >50% = you'd lose over half instantly.
+(dump_price_impact_percent)   │                                              │
+──────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Cascade Impact %              │ Total drop if top 5 sell sequentially.       │ >70% = near-total loss in panic scenario.
+(cumulative_dump_impact_%)    │                                              │
+──────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Holder Grade (holder_grade)   │ Overall token distribution health grade.     │ A = well distributed, F = concentration
+                              │                                              │ so extreme it's nearly certain rug risk.
+──────────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Investment After Dump         │ What your $100 becomes if top holder dumps,  │ Direct dollar impact on YOUR position.
+                              │ vs if the top 5 whales cascade dump.         │
+
+DISPLAY:
+  • Liquidity Depth Meter — horizontal bar with $10K/$50K/$100K thresholds
+  • Holder Distribution — Chart.js doughnut showing Top 1 / Top 2-5 / Rest
+    with color-coded segments (red / orange / green)
+  • Cascade Waterfall — Chart.js bar chart showing $100 → after top 1 →
+    after top 5, with declining bars
+  • LP Lock Visual — Ring gauge with lock/unlock icon and % secured
+  • Investment Impact — Before/After calculator with progress bars
+
+
+================================================================================
+5. STELLAR NETWORK ASSETS DATA
+================================================================================
+Purpose: Analyzes Stellar issuer account flags and security posture.
+
+FIELD                     │ BRIEF EXPLANATION                            │ DECISION IMPACT
+──────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Auth Required             │ Must the issuer approve every holder?        │ If true, issuer can control who holds tokens.
+──────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Auth Revocable            │ Can the issuer freeze your tokens?           │ If true, your tokens can be frozen at will.
+──────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Auth Immutable            │ Are these flags permanently locked?          │ If true, flags can never be changed — good.
+──────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Clawback Enabled          │ Can the issuer take tokens back from you?    │ If true, your tokens aren't truly yours.
+──────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Multisig Details          │ Does the issuer use multi-signature? Signer  │ Multi-sig = no single person has full control.
+(is_multisig, num_signers,│ count, med_threshold, high_threshold.        │ Thresholds show how many signers are needed.
+thresholds)               │                                              │ 
+──────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Home Domain               │ Is there a verified domain linked?           │ Linked domains add accountability.
+──────────────────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────
+Issuer Profile            │ issuer_address, native_balance_xlm, and list │ High XLM indicates an active account. Assets
+(assets, XLM balance,     │ of assets issued by the account.             │ show the network footprint.
+risk details/verdict)     │ Includes overall risk_level and details.     │
+
+DISPLAY:
+  • Toggle-style visual list of flags (green = enabled, grey = disabled)
+  • Risk level badge with plain-English report
+  • Issuer metadata card with multisig and balance info
